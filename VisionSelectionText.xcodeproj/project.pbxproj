@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8B0F9594209273A3002BB506 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0F9593209273A3002BB506 /* extensions.swift */; };
 		8B4A81F320670674003293E2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B4A81F220670674003293E2 /* AppDelegate.swift */; };
 		8B4A81F520670674003293E2 /* VisionSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B4A81F420670674003293E2 /* VisionSelectionViewController.swift */; };
 		8B4A81F820670674003293E2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8B4A81F620670674003293E2 /* Main.storyboard */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8B0F9593209273A3002BB506 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		8B4A81EF20670674003293E2 /* VisionSelectionText.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VisionSelectionText.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B4A81F220670674003293E2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8B4A81F420670674003293E2 /* VisionSelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionSelectionViewController.swift; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 				8B4A81FB20670674003293E2 /* LaunchScreen.storyboard */,
 				8B4A81FE20670674003293E2 /* Info.plist */,
 				8B4A8204206706C0003293E2 /* PreviewView.swift */,
+				8B0F9593209273A3002BB506 /* extensions.swift */,
 			);
 			path = VisionSelectionText;
 			sourceTree = "<group>";
@@ -142,6 +145,7 @@
 				8B4A81F520670674003293E2 /* VisionSelectionViewController.swift in Sources */,
 				8B4A81F320670674003293E2 /* AppDelegate.swift in Sources */,
 				8B4A8205206706C0003293E2 /* PreviewView.swift in Sources */,
+				8B0F9594209273A3002BB506 /* extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,7 +13,7 @@ import AVFoundation
 
 class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
     private var debug = false
-    private var boxb:CGRect?
+    private var box3:CGRect?
     private var box2:CGRect?
     private var requests = [VNRequest]()
     private let session = AVCaptureSession()
@@ -21,17 +21,17 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     private var orientation : AVCaptureVideoOrientation = .portrait
     let overlay = UIView()
     var lastPoint =  CGPoint(x: 0, y: 0)
-    
-    
+    var flag = false
     var initialImage:UIImage?
     @IBOutlet weak var previewView: PreviewView!
     
+    func normalize(value:Float,min:Float,max:Float)->Float{
+        return abs((value - min) / (max - min))
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        //        previewView.layer.borderColor = #colorLiteral(red: 0, green: 0.4784313725, blue: 1, alpha: 1)
-        //        previewView.layer.borderWidth = 4
-//        previewView
+        
         overlay.layer.borderColor = UIColor.blue.cgColor
         overlay.backgroundColor = UIColor.green.withAlphaComponent(0.5)
         overlay.isHidden = true
@@ -58,7 +58,38 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     }
     
     func reDrawSelectionArea(fromPoint: CGPoint, toPoint: CGPoint) {
+        flag = false
         overlay.isHidden = false
+        
+        var  resolutionX:Float = 0.0
+        var resolutionY:Float = 0.0
+        switch  orientation{
+        case .landscapeLeft ,.landscapeRight:
+            resolutionX = 1920.0
+            resolutionY = 1080.0
+        case .portraitUpsideDown, .portrait:
+            resolutionY = 1080.0
+            resolutionX = 1920.0
+        }
+        
+        
+        let fx = fromPoint.x
+        let fy = fromPoint.y
+        let tx = toPoint.x
+        let ty = toPoint.y
+        let y = normalize(value: Float(min(fy,ty)), min: 0.0, max: 1024.0) * resolutionY
+        let x = normalize(value: Float(min(fx,tx)), min: 0.0, max: 1366.0) * resolutionX
+        let height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1024.0) * resolutionY
+        let width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1366.0) * resolutionX
+        
+        
+        //
+        var rect2 = CGRect(x: CGFloat(x),
+                           y: CGFloat(y),
+                           width : CGFloat(width),
+                           height: CGFloat(height))
+        
+        
         
         //Calculate rect from the original point and last known point
         let rect = CGRect(x: min(fromPoint.x, toPoint.x),
@@ -66,9 +97,13 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
                           width : fabs(fromPoint.x - toPoint.x),
                           height: fabs(fromPoint.y - toPoint.y))
         
+        box2 = rect
+        box3 = rect2
         overlay.frame = rect
         
-        box2 = rect
+        print(previewView.frame)
+        print(overlay.frame)
+        
         
         
     }
@@ -76,7 +111,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         overlay.isHidden = true
         
         if (debug){
-            print("this is your final box size \(String(describing: boxb?.debugDescription))")
+            print("this is your final box size \(String(describing: box3?.debugDescription))")
             print("this is your final box size \(String(describing: box2?.debugDescription))")
             print("video preview layer size \(previewView.videoPreviewLayer.frame.width)")
             print("video preview layer size \(previewView.videoPreviewLayer.frame.height)")
@@ -88,7 +123,8 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         self.requests = [textRequest]
         
         
-        overlay.frame = CGRect(x: 0, y: 0, width: 0, height: 0)//reset overlay for next tap
+//        overlay.frame = CGRect(x: 0, y: 0, width: 0, height: 0)//reset overlay for next tap
+        flag = true
     }
     /* BELOW IS ALL VSION REALTED FUNCTIONS
      #######################################
@@ -130,26 +166,36 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        
+        //        self.prevLayer?.connection.videoOrientation = self.transformOrientation(UIInterfaceOrientation(rawValue: UIApplication.sharedApplication().statusBarOrientation.rawValue)!)
+        //        self.prevLayer?.frame.size = self.myView.frame.size
         coordinator.animate(alongsideTransition: { [weak self] (context) -> Void in
-            self?.previewView?.videoPreviewLayer.connection?.videoOrientation = (self?.videoOrientationFromCurrentDeviceOrientation())!
+            
+            self?.previewView?.videoPreviewLayer.connection?.videoOrientation = self!.transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
             self?.previewView.videoPreviewLayer.frame.size = size
+            
             
             
             },completion: { (context) -> Void in
                 
         })
-        
+        //        print(self.transformOrientation(orientation: UIInterfaceOrientation(rawValue: (UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)?.rawValue)!)!)
+        print(" for preview layer in viewwilltran \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
         super.viewWillTransition(to: size, with: coordinator)
     }
     override func viewDidLayoutSubviews() {
+        
+        print("before seting orienttion \(orientation.rawValue)")
         orientation = transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
+        previewView.videoPreviewLayer.connection?.videoOrientation = AVCaptureVideoOrientation(rawValue: orientation.rawValue)!
+        print("after seting orienttion \(orientation.rawValue)")
+        print(" for preview layer in viewdi layout \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
+        
+        
         
     }
     
     // MARK: - Vision Setup
     func setupVision() {
-        //        print("heree")
         let textRequest = VNDetectTextRectanglesRequest(completionHandler: self.textDetectionHandler )
         textRequest.reportCharacterBoxes = true
         
@@ -170,9 +216,6 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
                 self?.drawRegionBox(box: rg)
                 if let boxes = region?.characterBoxes {
                     for characterBox in boxes {
-                        //                        print(characterBox)
-                        //                        break
-                        //                        characterBox
                         self?.drawTextBox(box: characterBox)
                     }
                 }
@@ -182,7 +225,6 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     
     // MARK: - Draw
     func drawRegionBox(box: VNTextObservation) {
-        //        print(box.characterBoxes)
         guard let boxes = box.characterBoxes else {return}
         
         var xMin: CGFloat = 9999.0
@@ -213,16 +255,8 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         layer.frame.applying(rot ?? CGAffineTransform.identity)
         layer.borderWidth = 2.0
         layer.borderColor = UIColor.green.cgColor
+        //        var initialImage2 =  UIImage(cgImage:  (initialImage?.cgImage?.cropping(to: box3!))!)
         
-        let fromRect=layer.frame
-        let drawImage = initialImage!.cgImage!.cropping(to: fromRect)
-        if let imageTObe = drawImage{
-            let bimage = UIImage(cgImage: imageTObe, scale: 1, orientation: .right)
-        }
-        
-        
-        
-        //        image.image=bimage
         
         
         previewView.layer.addSublayer(layer)
@@ -248,8 +282,32 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     
     // MARK: - Camera Delegate and Setup
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        if (flag == false){
+            return
+        }
         //        var or = CGImagePropertyOrientation(rawValue: 6)!
         
+        
+        
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {return}
+        
+        
+        
+        var requestOptions:[VNImageOption : Any] = [:]
+        
+        if let camData = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, nil) {
+            requestOptions = [.cameraIntrinsics:camData]
+        }
+        var ciImage2 = CIImage(cvPixelBuffer: pixelBuffer)
+        //        ciImage2 = ciImage2.oriented(forExifOrientation: 6)
+        let context2 = CIContext(options: nil)
+        let cgImage2 = context2.createCGImage(ciImage2, from: ciImage2.extent)
+        
+        
+        var initialImagep =  UIImage(cgImage:  cgImage2!)
+        //         let rotatedImage  = UIImage.init(cgImage: initialImagep.cgImage!).rotated(by: Measurement(value: 90.0, unit: .degrees))
+        //        var initialImage2 =  UIImage(cgImage:  (initialImagep.cgImage!.cropping(to: box3!))!)
+        print(connection.videoOrientation.rawValue)
         switch  orientation{
         case .landscapeLeft:
             connection.videoOrientation =  .portrait
@@ -262,30 +320,37 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
             
         }
         
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {return}
         
-        var requestOptions:[VNImageOption : Any] = [:]
+        //        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 1)!, options: requestOptions)
+        //        let imageRequestHandler2 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 2)!, options: requestOptions)
+        //        let imageRequestHandler3 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 3)!, options: requestOptions)
+        //        let imageRequestHandler4 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 4)!, options: requestOptions)
+        //        let imageRequestHandler5 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 5)!, options: requestOptions)
+        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue:6 )!, options: requestOptions)
+        //        let imageRequestHandler7 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 7)!, options: requestOptions)
         
-        if let camData = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, nil) {
-            requestOptions = [.cameraIntrinsics:camData]
-        }
         
-        
-        
-        
-        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 6)!, options: requestOptions)
         //        print(imageRequestHandler)
         
         let context = CIContext(options: nil)
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { fatalError("cg image") }
-        initialImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: .right )
+        initialImage = initialImagep
+        var initialImagep2 =  UIImage(cgImage:  cgImage)
+        print(initialImage?.imageOrientation.rawValue)
+        print(connection.videoOrientation.rawValue)
+        print(previewView.videoPreviewLayer.connection?.videoOrientation.rawValue)
+        
+        let rotatedImage1 = UIImage(cgImage: cgImage )
+        //        var initialImage2 =  UIImage(cgImage:  (initialImage?.cgImage?.cropping(to: box3!))!)
         
         do {
             try imageRequestHandler.perform(self.requests)
         } catch {
             print(error)
         }
+        flag = false
     }
     
     func setupCamera() {
@@ -325,9 +390,10 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         }
         previewView.videoPreviewLayer.videoGravity = .resize
         
-        previewView.videoPreviewLayer.connection?.videoOrientation = transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
-        //
-        //        myView.layer.addSublayer(prevLayer)
+        previewView.videoPreviewLayer.connection!.videoOrientation = transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
+        print(previewView.videoPreviewLayer.connection!.videoOrientation.rawValue)
+        //         prevLayer?.connection.videoOrientation = transformOrientation(UIInterfaceOrientation(rawValue: UIApplication.sharedApplication().statusBarOrientation.rawValue)!)
+        //                myView.layer.addSublayer(prevLayer)
         
         session.startRunning()
     }
@@ -361,8 +427,8 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
             return .landscapeRight
         //2
         case .portraitUpsideDown:
-            //1
             return .portraitUpsideDown
+        //1
         default:
             return .portrait
         }
