@@ -10,8 +10,9 @@
 import UIKit
 import Vision
 import AVFoundation
+import TesseractOCR
 
-class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
+class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate,G8TesseractDelegate {
     private var debug = false
     private var box3:CGRect?
     private var box2:CGRect?
@@ -60,27 +61,33 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     func reDrawSelectionArea(fromPoint: CGPoint, toPoint: CGPoint) {
         flag = false
         overlay.isHidden = false
-        
-        var  resolutionX:Float = 0.0
-        var resolutionY:Float = 0.0
-        switch  orientation{
-        case .landscapeLeft ,.landscapeRight:
-            resolutionX = 1920.0
-            resolutionY = 1080.0
-        case .portraitUpsideDown, .portrait:
-            resolutionY = 1080.0
-            resolutionX = 1920.0
-        }
-        
-        
         let fx = fromPoint.x
         let fy = fromPoint.y
         let tx = toPoint.x
         let ty = toPoint.y
-        let y = normalize(value: Float(min(fy,ty)), min: 0.0, max: 1024.0) * resolutionY
-        let x = normalize(value: Float(min(fx,tx)), min: 0.0, max: 1366.0) * resolutionX
-        let height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1024.0) * resolutionY
-        let width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1366.0) * resolutionX
+        var  resolutionX:Float = 0.0
+        var resolutionY:Float = 0.0
+        var y:Float = 0.0
+        var x:Float = 0.0
+        var height:Float = 0.0
+        var width:Float = 0.0
+        switch  orientation{
+        case .landscapeLeft ,.landscapeRight:
+            resolutionX = 1920.0
+            resolutionY = 1080.0
+            y = normalize(value: Float(min(fy,ty)), min: 0.0, max: 1024.0) * resolutionY
+            x =  normalize(value: Float(min(fx,tx)), min: 0.0, max: 1366.0) * resolutionX
+            height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1024.0) * resolutionY
+            width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1366.0) * resolutionX
+        case .portraitUpsideDown, .portrait:
+            resolutionY = 1920.0
+            resolutionX = 1080.0
+            x = normalize(value: Float(min(fx,tx)), min: 0.0, max: 1024.0) * resolutionX
+            y =  normalize(value: Float(min(fy,ty)), min: 0.0, max: 1366.0) * resolutionY
+            width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1024.0) * resolutionY
+            height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1366.0) * resolutionX
+        }
+        
         
         
         //
@@ -123,7 +130,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         self.requests = [textRequest]
         
         
-//        overlay.frame = CGRect(x: 0, y: 0, width: 0, height: 0)//reset overlay for next tap
+        //        overlay.frame = CGRect(x: 0, y: 0, width: 0, height: 0)//reset overlay for next tap
         flag = true
     }
     /* BELOW IS ALL VSION REALTED FUNCTIONS
@@ -256,6 +263,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         layer.borderWidth = 2.0
         layer.borderColor = UIColor.green.cgColor
         //        var initialImage2 =  UIImage(cgImage:  (initialImage?.cgImage?.cropping(to: box3!))!)
+        //        poop(initialImage2)
         
         
         
@@ -299,14 +307,26 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
             requestOptions = [.cameraIntrinsics:camData]
         }
         var ciImage2 = CIImage(cvPixelBuffer: pixelBuffer)
-        //        ciImage2 = ciImage2.oriented(forExifOrientation: 6)
+        switch  orientation{
+        case .landscapeLeft ,.landscapeRight:
+            break
+        case .portraitUpsideDown, .portrait:
+            ciImage2 = ciImage2.oriented(forExifOrientation: 6)
+        }
+        
+        
+        
+        
+        
         let context2 = CIContext(options: nil)
         let cgImage2 = context2.createCGImage(ciImage2, from: ciImage2.extent)
         
         
         var initialImagep =  UIImage(cgImage:  cgImage2!)
-        //         let rotatedImage  = UIImage.init(cgImage: initialImagep.cgImage!).rotated(by: Measurement(value: 90.0, unit: .degrees))
-        //        var initialImage2 =  UIImage(cgImage:  (initialImagep.cgImage!.cropping(to: box3!))!)
+        print(initialImagep.imageOrientation.rawValue)
+        //                 let rotatedImage  = UIImage.init(cgImage: initialImagep.cgImage!).rotated(by: Measurement(value: 90.0, unit: .degrees))
+        var initialImage2 =  UIImage(cgImage:  (initialImagep.cgImage!.cropping(to: box3!))!)
+        
         print(connection.videoOrientation.rawValue)
         switch  orientation{
         case .landscapeLeft:
@@ -319,15 +339,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
             connection.videoOrientation =  .landscapeRight
             
         }
-        
-        
-        //        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 1)!, options: requestOptions)
-        //        let imageRequestHandler2 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 2)!, options: requestOptions)
-        //        let imageRequestHandler3 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 3)!, options: requestOptions)
-        //        let imageRequestHandler4 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 4)!, options: requestOptions)
-        //        let imageRequestHandler5 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 5)!, options: requestOptions)
         let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue:6 )!, options: requestOptions)
-        //        let imageRequestHandler7 = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: CGImagePropertyOrientation(rawValue: 7)!, options: requestOptions)
         
         
         //        print(imageRequestHandler)
@@ -431,6 +443,26 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         //1
         default:
             return .portrait
+        }
+    }
+    
+    
+    
+    
+    func progressImageRecognition(for tesseract: G8Tesseract!) {
+        print("Recognition Progress \(tesseract.progress) %")
+    }
+    
+    func poop(image:UIImage) {
+        if let tess = G8Tesseract(language: "eng") {
+            tess.delegate = self
+            tess.image = image.g8_blackAndWhite()
+            //            tess.image = UIImage(named: "20180314_000149")?.g8_blackAndWhite()
+            tess.recognize()
+            print(tess.recognizedText)
+            
+            //            textView.text = tess.recognizedText
+            
         }
     }
     
