@@ -14,6 +14,7 @@ import TesseractOCR
 
 class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate,G8TesseractDelegate {
     private var debug = false
+    private var tessResult:String?
     private var box3:CGRect?
     private var box2:CGRect?
     private var requests = [VNRequest]()
@@ -25,6 +26,10 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     var flag = false
     var initialImage:UIImage?
     @IBOutlet weak var previewView: PreviewView!
+    
+    
+    
+    
     
     func normalize(value:Float,min:Float,max:Float)->Float{
         return abs((value - min) / (max - min))
@@ -65,6 +70,10 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         let fy = fromPoint.y
         let tx = toPoint.x
         let ty = toPoint.y
+        var tyNorm:Float = 0.0
+        var txNorm:Float = 0.0
+        var fxNorm:Float = 0.0
+        var fyNorm:Float = 0.0
         var  resolutionX:Float = 0.0
         var resolutionY:Float = 0.0
         var y:Float = 0.0
@@ -75,22 +84,28 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         case .landscapeLeft ,.landscapeRight:
             resolutionX = 1920.0
             resolutionY = 1080.0
+            tyNorm = normalize(value: Float(ty), min: 0.0, max: 1024.0) * resolutionY
+            txNorm = normalize(value: Float(tx), min: 0.0, max: 1366.0) * resolutionX
+            fxNorm = normalize(value: Float(fx), min: 0.0, max: 1366.0) * resolutionX
+            fyNorm = normalize(value: Float(fy), min: 0.0, max: 1024.0) * resolutionY
             y = normalize(value: Float(min(fy,ty)), min: 0.0, max: 1024.0) * resolutionY
             x =  normalize(value: Float(min(fx,tx)), min: 0.0, max: 1366.0) * resolutionX
-            height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1024.0) * resolutionY
-            width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1366.0) * resolutionX
+            height = fabs(fyNorm - tyNorm)
+            width = fabs(fxNorm - txNorm)
         case .portraitUpsideDown, .portrait:
             resolutionY = 1920.0
             resolutionX = 1080.0
+            tyNorm = normalize(value: Float(ty), min: 0.0, max: 1366.0) * resolutionY
+            txNorm = normalize(value: Float(tx), min: 0.0, max: 1024.0) * resolutionX
+            fxNorm = normalize(value: Float(fx), min: 0.0, max: 1024.0) * resolutionX
+            fyNorm = normalize(value: Float(fy), min: 0.0, max: 1366.0) * resolutionY
             x = normalize(value: Float(min(fx,tx)), min: 0.0, max: 1024.0) * resolutionX
             y =  normalize(value: Float(min(fy,ty)), min: 0.0, max: 1366.0) * resolutionY
-            width = normalize(value: Float(fabs(fx - tx)), min: 0.0, max: 1024.0) * resolutionY
-            height = normalize(value: Float(fabs(fy - ty)), min: 0.0, max: 1366.0) * resolutionX
+            width = fabs(fxNorm - txNorm)
+            height = fabs(fyNorm - tyNorm)
         }
         
-        
-        
-        //
+    
         var rect2 = CGRect(x: CGFloat(x),
                            y: CGFloat(y),
                            width : CGFloat(width),
@@ -107,10 +122,10 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         box2 = rect
         box3 = rect2
         overlay.frame = rect
-        
+        if (debug){
         print(previewView.frame)
         print(overlay.frame)
-        
+        }
         
         
     }
@@ -186,16 +201,16 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
                 
         })
         //        print(self.transformOrientation(orientation: UIInterfaceOrientation(rawValue: (UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)?.rawValue)!)!)
-        print(" for preview layer in viewwilltran \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
+        //        print(" for preview layer in viewwilltran \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
         super.viewWillTransition(to: size, with: coordinator)
     }
     override func viewDidLayoutSubviews() {
         
-        print("before seting orienttion \(orientation.rawValue)")
+        //        print("before seting orienttion \(orientation.rawValue)")
         orientation = transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
         previewView.videoPreviewLayer.connection?.videoOrientation = AVCaptureVideoOrientation(rawValue: orientation.rawValue)!
-        print("after seting orienttion \(orientation.rawValue)")
-        print(" for preview layer in viewdi layout \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
+        //        print("after seting orienttion \(orientation.rawValue)")
+        //        print(" for preview layer in viewdi layout \(self.previewView?.videoPreviewLayer.connection?.videoOrientation.rawValue)")
         
         
         
@@ -326,6 +341,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         print(initialImagep.imageOrientation.rawValue)
         //                 let rotatedImage  = UIImage.init(cgImage: initialImagep.cgImage!).rotated(by: Measurement(value: 90.0, unit: .degrees))
         var initialImage2 =  UIImage(cgImage:  (initialImagep.cgImage!.cropping(to: box3!))!)
+        poop(image: initialImage2)
         
         print(connection.videoOrientation.rawValue)
         switch  orientation{
@@ -404,8 +420,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         
         previewView.videoPreviewLayer.connection!.videoOrientation = transformOrientation(orientation: UIInterfaceOrientation(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!)
         print(previewView.videoPreviewLayer.connection!.videoOrientation.rawValue)
-        //         prevLayer?.connection.videoOrientation = transformOrientation(UIInterfaceOrientation(rawValue: UIApplication.sharedApplication().statusBarOrientation.rawValue)!)
-        //                myView.layer.addSublayer(prevLayer)
+      
         
         session.startRunning()
     }
@@ -446,9 +461,6 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         }
     }
     
-    
-    
-    
     func progressImageRecognition(for tesseract: G8Tesseract!) {
         print("Recognition Progress \(tesseract.progress) %")
     }
@@ -459,10 +471,30 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
             tess.image = image.g8_blackAndWhite()
             //            tess.image = UIImage(named: "20180314_000149")?.g8_blackAndWhite()
             tess.recognize()
+            
             print(tess.recognizedText)
+            if let text = tess.recognizedText{
+                tessResult = tess.recognizedText
+            }else{
+                tessResult = "No Text Recognized"
+            }
+            
             
             //            textView.text = tess.recognizedText
             
+        }
+        
+        var computedResult:String{
+            get{
+                if let v = tessResult{
+                    return v
+                }
+                else{
+                    return ""
+                }
+                
+            }
+
         }
     }
     

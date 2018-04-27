@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8B0F9594209273A3002BB506 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0F9593209273A3002BB506 /* extensions.swift */; };
+		8B4516A52093794A008A00CF /* tessdata in Resources */ = {isa = PBXBuildFile; fileRef = 8B4516A42093794A008A00CF /* tessdata */; };
 		8B4A81F320670674003293E2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B4A81F220670674003293E2 /* AppDelegate.swift */; };
 		8B4A81F520670674003293E2 /* VisionSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B4A81F420670674003293E2 /* VisionSelectionViewController.swift */; };
 		8B4A81F820670674003293E2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8B4A81F620670674003293E2 /* Main.storyboard */; };
@@ -21,6 +22,7 @@
 /* Begin PBXFileReference section */
 		70D5C84FF3BCFC28BA302B01 /* Pods-VisionSelectionText.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VisionSelectionText.debug.xcconfig"; path = "Pods/Target Support Files/Pods-VisionSelectionText/Pods-VisionSelectionText.debug.xcconfig"; sourceTree = "<group>"; };
 		8B0F9593209273A3002BB506 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
+		8B4516A42093794A008A00CF /* tessdata */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tessdata; sourceTree = "<group>"; };
 		8B4A81EF20670674003293E2 /* VisionSelectionText.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VisionSelectionText.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B4A81F220670674003293E2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8B4A81F420670674003293E2 /* VisionSelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionSelectionViewController.swift; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				8B4A81F220670674003293E2 /* AppDelegate.swift */,
 				8B4A81F420670674003293E2 /* VisionSelectionViewController.swift */,
 				8B4A81F620670674003293E2 /* Main.storyboard */,
+				8B4516A42093794A008A00CF /* tessdata */,
 				8B4A81F920670674003293E2 /* Assets.xcassets */,
 				8B4A81FB20670674003293E2 /* LaunchScreen.storyboard */,
 				8B4A81FE20670674003293E2 /* Info.plist */,
@@ -160,6 +163,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8B4A81FD20670674003293E2 /* LaunchScreen.storyboard in Resources */,
+				8B4516A52093794A008A00CF /* tessdata in Resources */,
 				8B4A81FA20670674003293E2 /* Assets.xcassets in Resources */,
 				8B4A81F820670674003293E2 /* Main.storyboard in Resources */,
 			);
