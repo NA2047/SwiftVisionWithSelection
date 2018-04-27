@@ -49,7 +49,7 @@ extension UIImage {
             tess.recognize()
             if let text = tess.recognizedText{
                 print(text)
-                 return text
+                return text
             }else{
                 print("No Text Recognized")
                 return "No Text Recognized"
@@ -89,7 +89,17 @@ extension UIImage {
     }
     
     
+    
+    
+}
 
+
+extension Float{
+    func normalize(min:Float,max:Float)->Float{
+        return abs((self - min) / (max - min))
+    }
+    
+    
 }
 
 

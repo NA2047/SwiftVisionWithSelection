@@ -26,7 +26,7 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     var initialImage:UIImage?
     @IBOutlet weak var previewView: PreviewView!
     
-   
+    
     func normalize(value:Float,min:Float,max:Float)->Float{
         return abs((value - min) / (max - min))
     }
@@ -218,20 +218,16 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
     }
     
     // MARK: - Vision Setup
-    func setupVision() {
-        let textRequest = VNDetectTextRectanglesRequest(completionHandler: self.textDetectionHandler )
-        textRequest.reportCharacterBoxes = true
-        
-        
-        
-        self.requests = [textRequest]
-    }
-    
+    //    func setupVision() {
+    //        let textRequest = VNDetectTextRectanglesRequest(completionHandler: self.textDetectionHandler )
+    //        textRequest.reportCharacterBoxes = true
+    //        self.requests = [textRequest]
+    //    }
+    //
     func textDetectionHandler(request: VNRequest, error: Error?) {
         guard let observations = request.results else {print("no result"); return}
         
         let result = observations.map({$0 as? VNTextObservation})
-        //        result[0]!.characterBoxes
         DispatchQueue.main.async() {[weak self] in
             self?.previewView.layer.sublayers?.removeSubrange(1...)
             for region in result {
@@ -452,23 +448,22 @@ class VisionSelectionViewController: UIViewController, AVCaptureVideoDataOutputS
         }
     }
     
-//    func progressImageRecognition(for tesseract: G8Tesseract!) {
-//        print("Recognition Progress \(tesseract.progress) %")
-//    }
+    //    func progressImageRecognition(for tesseract: G8Tesseract!) {
+    //        print("Recognition Progress \(tesseract.progress) %")
+    //    }
     
     func poop(image:UIImage) {
         if let tess = G8Tesseract(language: "eng") {
-//            tess.delegate = self
+            //            tess.delegate = self
             tess.image = image.g8_blackAndWhite()
             tess.recognize()
-//            if(debug){
-//                print(tess.recognizedText)
-//            }
+            
             if let text = tess.recognizedText{
                 print(tess.recognizedText)
                 tessResult = text
                 
             }else{
+                print("No Text Recognized")
                 tessResult = "No Text Recognized"
             }
             
