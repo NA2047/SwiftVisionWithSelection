@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import TesseractOCR
 
 extension CGImagePropertyOrientation {
     init(_ uiOrientation: UIImageOrientation) {
@@ -38,7 +39,26 @@ extension UIImageOrientation {
     }
 }
 
+
 extension UIImage {
+    
+    
+    func tessText()->String {
+        if let tess = G8Tesseract(language: "eng") {
+            tess.image = self.g8_blackAndWhite()
+            tess.recognize()
+            if let text = tess.recognizedText{
+                print(text)
+                 return text
+            }else{
+                print("No Text Recognized")
+                return "No Text Recognized"
+            }
+        }else{
+            return "now training data on eng"
+        }
+    }
+    
     struct RotationOptions: OptionSet {
         let rawValue: Int
         
@@ -69,6 +89,7 @@ extension UIImage {
     }
     
     
+
 }
 
 
